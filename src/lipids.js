@@ -12,11 +12,11 @@
 //                      anionic | fluorescent
 //    amines  : titratable nitrogen atoms per molecule (for N/P calc)
 //    stock   : sensible default stock concentration (mg/ml) – user editable
-//    smiles  : optional structure (filled lazily from PubChem when online)
+//    smiles  : optional structure string
 //    source  : provenance label
 //
 //  Molar weights follow Avanti / vendor spec sheets. Every value remains
-//  user-editable inside the matrix, and the online sync can refresh them.
+//  user-editable inside the matrix.
 // ---------------------------------------------------------------------------
 
 export const LIPID_CLASSES = {

@@ -8,7 +8,7 @@ import {
   derive, addColumn, clearAmounts, applyPreset, setVolume, setTotalConc, MAX_COLUMNS, fmt,
 } from '../calc.js';
 import { predict } from '../predict.js';
-import { initDB, getAllLipids, syncFromRemote, getMeta, addCustomLipid } from '../db.js';
+import { initDB, getAllLipids, addCustomLipid } from '../db.js';
 import { exportFormulation } from '../exportXlsx.js';
 
 const LS_KEY = 'lnp.dashboard.v1';
@@ -65,8 +65,6 @@ export function App() {
   const [payload, setPayload] = useState(persisted?.payload || { type: 'mRNA', amount: 271, npRatio: 6 });
   const [process, setProcess] = useState(persisted?.process || { frr: 3, tfr: 12 });
   const [online, setOnline] = useState(navigator.onLine);
-  const [sync, setSync] = useState({ busy: false, msg: '' });
-  const [lastSync, setLastSync] = useState(null);
   const [toast, setToast] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -74,10 +72,8 @@ export function App() {
   const prediction = useMemo(() => predict(state, d, payload, process), [state, d, payload, process]);
 
   useEffect(() => {
-    initDB().then(async (ls) => {
-      setLipids(ls);
-      setLastSync(await getMeta('lastSync'));
-    }).catch((e) => setToast({ kind: 'err', text: 'Database initialisation failed: ' + e.message }));
+    initDB().then((ls) => setLipids(ls))
+      .catch((e) => setToast({ kind: 'err', text: 'Database initialisation failed: ' + e.message }));
 
     const on = () => setOnline(true), off = () => setOnline(false);
     window.addEventListener('online', on); window.addEventListener('offline', off);
@@ -121,19 +117,6 @@ export function App() {
     setToast({ kind: 'ok', text: 'Excel workbook exported.' });
   };
 
-  const doSync = async () => {
-    if (!online) { setToast({ kind: 'err', text: 'Offline — connect to sync structure data.' }); return; }
-    setSync({ busy: true, msg: 'Contacting PubChem…' });
-    try {
-      const res = await syncFromRemote({ onProgress: ({ tried, total, name }) => setSync({ busy: true, msg: `Fetching ${name} (${tried}/${total})` }) });
-      setLipids(await getAllLipids());
-      setLastSync(await getMeta('lastSync'));
-      setToast({ kind: 'ok', text: res.ok ? `Synced — ${res.updated} record(s) enriched.` : 'Nothing to sync.' });
-    } catch (e) {
-      setToast({ kind: 'err', text: 'Sync failed: ' + e.message });
-    } finally { setSync({ busy: false, msg: '' }); }
-  };
-
   const atMax = state.columns.length >= MAX_COLUMNS;
   const hasCols = state.columns.length > 0;
 
@@ -150,14 +133,11 @@ export function App() {
           </div>
         </div>
         <div class="ml-auto flex items-center gap-2">
-          <${Pill} color=${online ? '#059669' : '#e11d48'} dot=${true} title=${lastSync ? 'Last sync ' + new Date(lastSync).toLocaleString() : 'Not yet synced'}>
+          <${Pill} color=${online ? '#059669' : '#e11d48'} dot=${true} title=${online ? 'Connected to the internet' : 'No internet connection'}>
             ${online ? 'Online' : 'Offline'}</${Pill}>
-          <${Btn} onClick=${doSync} icon=${sync.busy ? 'refresh' : 'cloud'} disabled=${sync.busy || !online}
-            title="Fetch SMILES / reference MW from PubChem">${sync.busy ? 'Syncing…' : 'Sync'}</${Btn}>
           <${ThemeToggle} />
         </div>
       </div>
-      ${sync.busy && html`<div class=${cx('px-4 py-1 text-[11px] text-teal-700 dark:text-teal-300', tw.surfaceMuted)}>${sync.msg}</div>`}
     </header>
 
     <main class="mx-auto max-w-[1400px] space-y-5 px-4 py-5">
@@ -260,7 +240,7 @@ export function App() {
       </div>`}
 
       <footer class=${cx('space-y-1 pb-6 pt-2 text-center text-[11px]', tw.textFaint)}>
-        <p>Heuristic predictions for formulation design — validate by DLS, zeta and RiboGreen. Data cached locally in IndexedDB · works offline.</p>
+        <p>Heuristic predictions for formulation design — validate by DLS, zeta and RiboGreen. Your saved lipids and current formulation are stored locally in this browser.</p>
         <p>© ${new Date().getFullYear()} Shihab Ud Dowla · Pharmaceutical Nanotechnology, University of Helsinki. All rights reserved.</p>
       </footer>
     </main>

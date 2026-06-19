@@ -66,8 +66,8 @@ their next reload.
     name, product code, molecular weight and class are auto-filled for review. A
     spinner shows while fetching; if you are offline or the scrape fails you get a
     graceful "enter details manually" notice.
-- Stored locally in **IndexedDB** (via Dexie). When online, **Sync** tops up missing
-  SMILES / reference MW from the public **PubChem** API and caches them.
+- Stored locally in **IndexedDB** (via Dexie), per browser on each user's device — saved
+  lipids are not shared between users or computers (export to Excel to share).
 
 ### Light / dark theme
 A sun/moon toggle in the header switches between a soft light theme (slate-50) and a
@@ -132,7 +132,7 @@ src/
   lipids.js             Avanti seed data + example formulations
   calc.js               reactive stoichiometric engine + edit handlers
   predict.js            predictive engine (morphology/size/zeta/EE)
-  db.js                 Dexie repository + PubChem sync
+  db.js                 Dexie repository (local IndexedDB)
   exportXlsx.js         SheetJS workbook builder
   components/           React UI (htm — no JSX build required)
 ```
