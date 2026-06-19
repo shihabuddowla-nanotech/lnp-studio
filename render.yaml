@@ -1,0 +1,9 @@
+# Render Blueprint — auto-deploys serve.py on every push to the connected branch.
+# In Render: New → Blueprint → pick this repo → Deploy. Auto-deploy is on by default.
+services:
+  - type: web
+    name: lnp-studio
+    runtime: python
+    plan: free
+    buildCommand: ""
+    startCommand: "python serve.py"

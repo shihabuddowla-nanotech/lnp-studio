@@ -1,0 +1,13 @@
+# Local agent / editor tooling (not part of the app)
+.claude/
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# OS cruft
+.DS_Store
+Thumbs.db
+desktop.ini
